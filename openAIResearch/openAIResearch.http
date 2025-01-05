@@ -1,0 +1,6 @@
+@openAIResearch_HostAddress = http://localhost:5159
+
+GET {{openAIResearch_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

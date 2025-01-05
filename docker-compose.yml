@@ -1,0 +1,6 @@
+services:
+  openairesearch:
+    image: ${DOCKER_REGISTRY-}openairesearch
+    build:
+      context: .
+      dockerfile: openAIResearch/Dockerfile
