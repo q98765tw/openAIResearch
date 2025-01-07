@@ -5,6 +5,7 @@ using OpenAI.Assistants;
 using OpenAI.Files;
 using openAIResearch.Files;
 using System.ClientModel;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 
 namespace openAIResearch.Controllers
 {
@@ -13,27 +14,27 @@ namespace openAIResearch.Controllers
     public class ChatbotController : ControllerBase
     {
         private readonly OpenAIClient _client;
+        private readonly string _apiKey;
 
         public ChatbotController(IConfiguration configuration)
         {
             // 從設定中讀取 API Key
-            string apiKey = configuration["OpenAI:ApiKey"];
-            _client = new OpenAIClient("sk-svcacct-7nkcGU_LoUjzKsXRUpD7KkUJIb6HbdIpbm1mBliePW0e8xfUTlYKPvZ9rCSF1IXT3BlbkFJlLFqgaG4zjIuXsjeg7esvY0YARmQtMLf_H-5l4oz-6TieXntoPf6mn1Vbo7C71AA");
+            _apiKey = configuration["OpenAI:ApiKey"];
+            _client = new OpenAIClient(_apiKey);
         }
 
-        [HttpPost("ask")]
-        public async Task<IActionResult> Ask([FromBody] ChatRequest request)
+        [HttpPost("Ask")]
+        public async Task<IActionResult> Ask(string request)
         {
-            if (string.IsNullOrWhiteSpace(request.Question))
+            if (string.IsNullOrWhiteSpace(request))
             {
                 return BadRequest("問題不能為空");
             }
-
             try { 
 
-                ChatClient client = new(model: "gpt-3.5-turbo", apiKey: "sk-svcacct-7nkcGU_LoUjzKsXRUpD7KkUJIb6HbdIpbm1mBliePW0e8xfUTlYKPvZ9rCSF1IXT3BlbkFJlLFqgaG4zjIuXsjeg7esvY0YARmQtMLf_H-5l4oz-6TieXntoPf6mn1Vbo7C71AA");
+                ChatClient client = new(model: "gpt-3.5-turbo", apiKey: _apiKey);
 
-                ChatCompletion completion = client.CompleteChat("Answer Today");
+                ChatCompletion completion = client.CompleteChat(request);
 
                 Console.WriteLine($"[ASSISTANT]: {completion.Content[0].Text}");
             
@@ -46,8 +47,12 @@ namespace openAIResearch.Controllers
                 return StatusCode(500, $"伺服器錯誤: {ex.Message}");
             }
         }
-        [HttpPost("uploadFile")]
-        public async Task<string> uploadFile()
+        /// <summary>
+        /// 內建問題和文件
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("AskByFile")]
+        public async Task<string> AskByFile()
         {
             try
             {
@@ -113,10 +118,5 @@ namespace openAIResearch.Controllers
             }
         }
 
-    }
-
-    public class ChatRequest
-    {
-        public string Question { get; set; }
     }
 }
