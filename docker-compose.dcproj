@@ -10,6 +10,7 @@
     <DockerServiceName>openairesearch</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="compose.local.env" />
     <None Include="docker-compose.override.yml">
       <DependentUpon>docker-compose.yml</DependentUpon>
     </None>

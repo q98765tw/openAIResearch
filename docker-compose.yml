@@ -1,6 +1,7 @@
 services:
   openairesearch:
     image: ${DOCKER_REGISTRY-}openairesearch
+    env_file: compose.local.env
     build:
       context: .
       dockerfile: openAIResearch/Dockerfile
