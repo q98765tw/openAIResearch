@@ -8,6 +8,7 @@ using System.ClientModel;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using openAIResearch.Services;
 using System.Xml.Linq;
+using System.ComponentModel;
 
 namespace openAIResearch.Controllers
 {
@@ -49,11 +50,13 @@ namespace openAIResearch.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost("AskByFile")]
-        public async Task<IActionResult> AskByFile()
+        public async Task<IActionResult> AskByFile(
+            [DefaultValue("How well did product 113045 sell in January? Answer it.")]string request
+            )
         {
             try
             {
-                var response = _chatbotService.AskByFile();
+                var response =await _chatbotService.AskByFile(request);
                 return Ok(response);
             }
             catch (Exception ex)

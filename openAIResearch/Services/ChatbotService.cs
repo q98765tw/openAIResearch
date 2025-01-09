@@ -45,32 +45,14 @@ namespace openAIResearch.Services
             var data = assistantClient.GetAssistants().ToList();
             return data;
         }
-        public async Task<string> AskByFile() 
+        public async Task<string> AskByFile(string request) 
         {
-            //OpenAIFileClient fileClient = _client.GetOpenAIFileClient();
             AssistantClient assistantClient = _client.GetAssistantClient();
-            //using Stream document = textJson.GetTextJson();
-            //var salesFile = fileClient.UploadFile(document, "monthly_sales.json", FileUploadPurpose.Assistants);
-            //if (salesFile == null)
-            //{
-            //    return "檔案上傳失敗，無法建立助手。";
-            //}
-
-            AssistantCreationOptions assistantOptions = new()
-            {
-                Name = "Example: Contoso sales RAG",
-                Instructions = "You are an assistant that looks up sales data and answers it.",
-                Tools = { new FileSearchToolDefinition(), new CodeInterpreterToolDefinition() },
-                ToolResources = new()
-                {
-                    FileSearch = new() { NewVectorStores = { new VectorStoreCreationHelper(new[] { "file-PESo6FtJgygYNAMhcYodGo" }) } }
-                }
-            };
-
-            Assistant assistant = assistantClient.CreateAssistant("gpt-3.5-turbo", assistantOptions);
+            //反正他文件已經綁死在當時建立助理時，理論上我可以直接放問題問她
+            Assistant assistant = assistantClient.GetAssistant("asst_Ss5IK45XgKaQMWOdbHjY83Ms");
             ThreadCreationOptions threadOptions = new()
             {
-                InitialMessages = { "How well did product 113045 sell in February? Answer it." }
+                InitialMessages = { request }
             };
 
             ThreadRun threadRun = assistantClient.CreateThreadAndRun(assistant.Id, threadOptions);
