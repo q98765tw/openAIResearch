@@ -39,12 +39,7 @@ namespace openAIResearch.Services
             // 回傳回應內容
             return  completion.Content[0].Text;
         }
-        public List<Assistant> AssistantList() 
-        {
-            AssistantClient assistantClient = _client.GetAssistantClient();
-            var data = assistantClient.GetAssistants().ToList();
-            return data;
-        }
+    
         public async Task<string> AskByFile(string request) 
         {
             AssistantClient assistantClient = _client.GetAssistantClient();
@@ -83,22 +78,6 @@ namespace openAIResearch.Services
                 }
             }
             return "助手沒回應";
-        }
-
-        public async Task AddUser(string name)
-        {
-            var data = new user()
-            {
-                name = name,
-            };
-            await _context.AddAsync(data);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task<List<user>> GetUser() 
-        { 
-            var users = _context.users.ToList();
-            return users;
         }
 
         public async Task UploadFile(IFormFile file)

@@ -64,57 +64,7 @@ namespace openAIResearch.Controllers
                 return StatusCode(500, $"伺服器錯誤: {ex.Message}");
             }
         }
-        /// <summary>
-        /// AssistantList
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("AssistantList")]
-        public async Task<IActionResult> AssistantList()
-        {
-            try
-            {
-                var response = _chatbotService.AssistantList();
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"伺服器錯誤: {ex.Message}");
-            }
-        }
-        /// <summary>
-        /// 測試 add documents
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("AddDocument")]
-        public async Task<IActionResult> AddDocument()
-        {
-            try
-            {
-                await _chatbotService.AddDocument();
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"伺服器錯誤: {ex.Message}");
-            }
-        }
-        /// <summary>
-        /// 測試get document
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("GetEmbedding")]
-        public async Task<IActionResult> GetEmbedding()
-        {
-            try
-            {
-                var response = await _chatbotService.GetEmbedding();
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"伺服器錯誤: {ex.Message}");
-            }
-        }
+       
         /// <summary>
         /// 丟.txt到後端拆解字段，並且給openAI分析字段，返回並存入documents
         /// </summary>
