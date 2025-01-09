@@ -46,7 +46,24 @@ namespace openAIResearch.Controllers
             }
         }
         /// <summary>
-        /// 內建問題和文件
+        /// 建立助手
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("CreateAssistant")]
+        public async Task<IActionResult> CreateAssistant()
+        {
+            try
+            {
+                var response = _chatbotService.CreateAssistant();
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"伺服器錯誤: {ex.Message}");
+            }
+        }
+        /// <summary>
+        /// 回答問題(過去助手包含文件)
         /// </summary>
         /// <returns></returns>
         [HttpPost("AskByFile")]

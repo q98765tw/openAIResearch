@@ -39,7 +39,31 @@ namespace openAIResearch.Services
             // 回傳回應內容
             return  completion.Content[0].Text;
         }
-    
+        public async Task<string> CreateAssistant() 
+        {
+            OpenAIFileClient fileClient = _client.GetOpenAIFileClient();
+            AssistantClient assistantClient = _client.GetAssistantClient();
+            using Stream document = textJson.GetTextJson();
+            var salesFile = fileClient.UploadFile(document, "monthly_sales.json", FileUploadPurpose.Assistants);
+            if (salesFile == null)
+            {
+                return "檔案上傳失敗，無法建立助手。";
+            }
+
+            AssistantCreationOptions assistantOptions = new()
+            {
+                Name = "Example: Contoso sales RAG",
+                Instructions = "Please provide concise and brief responses to questions.",
+                Tools = { new FileSearchToolDefinition(), new CodeInterpreterToolDefinition() },
+                ToolResources = new()
+                {
+                    FileSearch = new() { NewVectorStores = { new VectorStoreCreationHelper(new[] { salesFile.Value.Id }) } }
+                }
+            };
+
+            Assistant assistant = assistantClient.CreateAssistant("gpt-3.5-turbo", assistantOptions);
+            return assistant.Name;
+        }
         public async Task<string> AskByFile(string request) 
         {
             AssistantClient assistantClient = _client.GetAssistantClient();
