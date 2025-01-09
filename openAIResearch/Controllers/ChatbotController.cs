@@ -68,7 +68,7 @@ namespace openAIResearch.Controllers
                 AssistantCreationOptions assistantOptions = new()
                 {
                     Name = "Example: Contoso sales RAG",
-                    Instructions = "You are an assistant that looks up sales data and answers it.",
+                    Instructions = "Please provide concise and brief responses to questions.",
                     Tools = { new FileSearchToolDefinition(), new CodeInterpreterToolDefinition() },
                     ToolResources = new()
                     {
@@ -77,39 +77,7 @@ namespace openAIResearch.Controllers
                 };
 
                 Assistant assistant = assistantClient.CreateAssistant("gpt-3.5-turbo", assistantOptions);
-                ThreadCreationOptions threadOptions = new()
-                {
-                    InitialMessages = { "How well did product 113045 sell in February? Answer it." }
-                };
-
-                ThreadRun threadRun = assistantClient.CreateThreadAndRun(assistant.Id, threadOptions);
-
-                do
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                    threadRun = assistantClient.GetRun(threadRun.ThreadId, threadRun.Id);
-                } while (!threadRun.Status.IsTerminal);
-
-                CollectionResult<ThreadMessage> messages = assistantClient.GetMessages(threadRun.ThreadId, new MessageCollectionOptions() { Order = MessageCollectionOrder.Ascending });
-
-                if (messages == null || messages.Count() == 0)
-                {
-                    return "未收到任何回應，請檢查助手設定或問題。";
-                }
-
-                foreach (ThreadMessage message in messages)
-                {
-                    foreach (MessageContent contentItem in message.Content)
-                    {
-                        if (message.Role.ToString().Equals("ASSISTANT", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(message.Content.ToString()))
-                        {
-                            Console.WriteLine($"{contentItem.Text}");
-                            return contentItem.Text;
-                        }
-                        
-                    }
-                }
-                return "助手沒回應";
+                return assistant.Name;
             }
             catch (Exception ex)
             {
