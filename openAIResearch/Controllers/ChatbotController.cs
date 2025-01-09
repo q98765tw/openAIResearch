@@ -7,6 +7,7 @@ using openAIResearch.Files;
 using System.ClientModel;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using openAIResearch.Services;
+using System.Xml.Linq;
 
 namespace openAIResearch.Controllers
 {
@@ -61,32 +62,15 @@ namespace openAIResearch.Controllers
             }
         }
         /// <summary>
-        /// 測試Add Users
+        /// AssistantList
         /// </summary>
         /// <returns></returns>
-        [HttpPost("Add")]
-        public async Task<IActionResult> AddUser(string name)
+        [HttpGet("AssistantList")]
+        public async Task<IActionResult> AssistantList()
         {
             try
             {
-                await _chatbotService.AddUser(name);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"伺服器錯誤: {ex.Message}");
-            }
-        }
-        /// <summary>
-        /// 拿全部 Users 資料
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("Get")]
-        public async Task<IActionResult> GetUser()
-        {
-            try
-            {
-                var response = await _chatbotService.GetUser();
+                var response = _chatbotService.AssistantList();
                 return Ok(response);
             }
             catch (Exception ex)
@@ -95,10 +79,44 @@ namespace openAIResearch.Controllers
             }
         }
         /// <summary>
-        /// 拿全部 Users 資料
+        /// 測試 add documents
         /// </summary>
         /// <returns></returns>
-        [HttpGet("UploadFile")]
+        [HttpGet("AddDocument")]
+        public async Task<IActionResult> AddDocument()
+        {
+            try
+            {
+                await _chatbotService.AddDocument();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"伺服器錯誤: {ex.Message}");
+            }
+        }
+        /// <summary>
+        /// 測試get document
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("GetEmbedding")]
+        public async Task<IActionResult> GetEmbedding()
+        {
+            try
+            {
+                var response = await _chatbotService.GetEmbedding();
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"伺服器錯誤: {ex.Message}");
+            }
+        }
+        /// <summary>
+        /// 丟.txt到後端拆解字段，並且給openAI分析字段，返回並存入documents
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("UploadFile")]
         public async Task<IActionResult> UploadFile(IFormFile file)
         {
             try

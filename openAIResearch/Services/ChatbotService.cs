@@ -9,6 +9,9 @@ using System.ClientModel;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using openAIResearch.Services;
 using openAIResearch.DB.Model;
+using System.Text;
+using Microsoft.EntityFrameworkCore;
+using Slack.NetStandard.WebApi.Apps;
 
 namespace openAIResearch.Services
 {
@@ -36,16 +39,22 @@ namespace openAIResearch.Services
             // 回傳回應內容
             return  completion.Content[0].Text;
         }
+        public List<Assistant> AssistantList() 
+        {
+            AssistantClient assistantClient = _client.GetAssistantClient();
+            var data = assistantClient.GetAssistants().ToList();
+            return data;
+        }
         public async Task<string> AskByFile() 
         {
-            OpenAIFileClient fileClient = _client.GetOpenAIFileClient();
+            //OpenAIFileClient fileClient = _client.GetOpenAIFileClient();
             AssistantClient assistantClient = _client.GetAssistantClient();
-            using Stream document = textJson.GetTextJson();
-            var salesFile = fileClient.UploadFile(document, "monthly_sales.json", FileUploadPurpose.Assistants);
-            if (salesFile == null)
-            {
-                return "檔案上傳失敗，無法建立助手。";
-            }
+            //using Stream document = textJson.GetTextJson();
+            //var salesFile = fileClient.UploadFile(document, "monthly_sales.json", FileUploadPurpose.Assistants);
+            //if (salesFile == null)
+            //{
+            //    return "檔案上傳失敗，無法建立助手。";
+            //}
 
             AssistantCreationOptions assistantOptions = new()
             {
@@ -54,7 +63,7 @@ namespace openAIResearch.Services
                 Tools = { new FileSearchToolDefinition(), new CodeInterpreterToolDefinition() },
                 ToolResources = new()
                 {
-                    FileSearch = new() { NewVectorStores = { new VectorStoreCreationHelper(new[] { salesFile.Value.Id }) } }
+                    FileSearch = new() { NewVectorStores = { new VectorStoreCreationHelper(new[] { "file-PESo6FtJgygYNAMhcYodGo" }) } }
                 }
             };
 
@@ -112,38 +121,110 @@ namespace openAIResearch.Services
 
         public async Task UploadFile(IFormFile file)
         {
-            // 1. 讀取 .txt 文件內容
+            // 1. 驗證檔案大小
+            if (file.Length > 10 * 1024 * 1024) // 10 MB
+            {
+                throw new InvalidOperationException("File size exceeds the allowed limit.");
+            }
+
+            // 2. 讀取檔案內容
             string content;
             using (var reader = new StreamReader(file.OpenReadStream()))
             {
                 content = await reader.ReadToEndAsync();
             }
+
             EmbeddingClient client = new("text-embedding-3-small", _apiKey);
 
-            // 2. 將內容切分為段落
+            // 3. 切分內容為段落
             var paragraphs = SplitContentToParagraphs(content);
-            // 3. 將每個段落發送到 OpenAI，生成向量並存入資料庫
+
+            var documents = new List<Document>();
+
             foreach (var paragraph in paragraphs)
             {
-                OpenAIEmbedding embedding = client.GenerateEmbedding(paragraph);
-                var vector = embedding.ToFloats().ToArray();
-
-                var document = new Document
+                try
                 {
-                    Content = paragraph,
-                    Embedding = vector
-                };
+                    // 非同步生成嵌入
+                    OpenAIEmbedding embedding = await client.GenerateEmbeddingAsync(paragraph);
+                    var vector = embedding.ToFloats().ToArray();
 
-                _context.documents.Add(document);
+                    // 構建 Document 實體
+                    documents.Add(new Document
+                    {
+                        Name = file.Name,
+                        Content = paragraph,
+                        Embedding = vector
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // 記錄錯誤
+                    Console.WriteLine($"Error processing paragraph: {ex.Message}");
+                }
             }
 
-            await _context.SaveChangesAsync();
+            // 4. 批量插入資料庫
+            if (documents.Any())
+            {
+                _context.documents.AddRange(documents);
+                await _context.SaveChangesAsync();
+            }
         }
 
-        // 切分文本為段落的輔助方法
+
+        //拆段落
         private IEnumerable<string> SplitContentToParagraphs(string content)
         {
-            return content.Split(new[] { "\n\n", "\r\n\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            const int maxLength = 1000; // 每段最多 1000 字
+            var paragraphs = content.Split(new[] { "\n\n", "\r\n\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var paragraph in paragraphs)
+            {
+                if (paragraph.Length > maxLength)
+                {
+                    // 長段落進一步切分
+                    for (int i = 0; i < paragraph.Length; i += maxLength)
+                    {
+                        yield return paragraph.Substring(i, Math.Min(maxLength, paragraph.Length - i));
+                    }
+                }
+                else
+                {
+                    yield return paragraph.Trim();
+                }
+            }
+        }
+
+
+        public async Task AddDocument()
+        {
+            var random = new Random();
+            var vector = new StringBuilder("[");
+            for (int i = 0; i < 1536; i++)
+            {
+                vector.Append(random.NextDouble().ToString("F4")); // 保留 4 位小數
+                if (i < 1535)
+                    vector.Append(", ");
+            }
+            vector.Append("]");
+
+            // 生成 SQL 語句
+            string sql = $@"
+            INSERT INTO documents (name, content, embedding)
+            VALUES ('Test Document', 'This is a test', '{vector}'::vector);
+            ";
+        }
+
+        public async Task<string> GetEmbedding()
+        {
+            EmbeddingClient client = new("text-embedding-3-small", _apiKey);
+            //EmbeddingGenerationOptions options = new() { Dimensions = 512 };
+
+            OpenAIEmbedding embedding = client.GenerateEmbedding("test text.");
+            ReadOnlyMemory<float> vector = embedding.ToFloats();
+
+            return string.Join(",", vector.ToArray()); // 轉換向量為字串返回
         }
     }
 }

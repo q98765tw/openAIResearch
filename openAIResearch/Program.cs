@@ -27,19 +27,20 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-using (var scope = app.Services.CreateScope())
-{
-    var scopedProvider = scope.ServiceProvider;
-    try
-    {
-        var appDbContext = scopedProvider.GetRequiredService<AppDbContext>();
-        appDbContext.Database.EnsureCreated();
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogError(ex, "An error occurred from the DB.");
-    }
-}
+//沒有資料庫，自動建立
+//using (var scope = app.Services.CreateScope())
+//{
+//    var scopedProvider = scope.ServiceProvider;
+//    try
+//    {
+//        var appDbContext = scopedProvider.GetRequiredService<AppDbContext>();
+//        appDbContext.Database.EnsureCreated();
+//    }
+//    catch (Exception ex)
+//    {
+//        app.Logger.LogError(ex, "An error occurred from the DB.");
+//    }
+//}
 
 app.UseHttpsRedirection();
 

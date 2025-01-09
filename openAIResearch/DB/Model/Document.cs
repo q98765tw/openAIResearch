@@ -8,9 +8,15 @@ namespace openAIResearch.DB.Model
         [Key]
         public int Id { get; set; } // 主鍵
 
+        [Required]
+        [MaxLength(255)]
+        public string Name { get; set; } // 文件名稱
+
+        [Required]
         public string Content { get; set; } // 原始文本內容
 
-        [Column(TypeName = "vector")] // 對應 PostgreSQL 的 VECTOR 資料類型
-        public float[] Embedding { get; set; } // 嵌入向量（EF Core 無原生向量支援，這裡用 float[] 表示）
+        [Column(TypeName = "vector(1536)")] // PostgreSQL VECTOR 資料類型
+        public float[] Embedding { get; set; } // 嵌入向量
     }
+
 }
