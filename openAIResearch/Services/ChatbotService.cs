@@ -49,7 +49,7 @@ namespace openAIResearch.Services
         {
             AssistantClient assistantClient = _client.GetAssistantClient();
             //反正他文件已經綁死在當時建立助理時，理論上我可以直接放問題問她
-            Assistant assistant = assistantClient.GetAssistant("asst_Ss5IK45XgKaQMWOdbHjY83Ms");
+            Assistant assistant = assistantClient.GetAssistant("asst_GjTbob68qBfQDtadi7nL59L4");
             ThreadCreationOptions threadOptions = new()
             {
                 InitialMessages = { request }
